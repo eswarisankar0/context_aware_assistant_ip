@@ -1,23 +1,25 @@
+from .time_parser import parse_time
+
 class ActionRouter:
+    def __init__(self):
+        self.reminders = []
 
-    reminders = []
-
-    def handle_action(self, intent, user_input):
+    def handle_action(self, intent, msg):
 
         if intent == "set_reminder":
+            time = parse_time(msg)
 
             reminder = {
-                "task": user_input,
-                "time": "parsed_later"   # MVP placeholder
+                "task": msg,
+                "time": str(time)
             }
 
             self.reminders.append(reminder)
-            return reminder   # return JSON instead of text
 
-        elif intent == "save_habit":
-            return {"status": "habit_saved"}
-
-        elif intent == "save_preference":
-            return {"status": "preference_saved"}
+            return {
+                "reply": f"Reminder set for {time}",
+                "task": msg,
+                "time": str(time)
+            }
 
         return None

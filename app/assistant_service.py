@@ -8,22 +8,38 @@ llm = LLMEngine()
 context = ContextBuilder()
 router = ActionRouter()
 
-# ⭐ NEW: simple conversation memory
+# ⭐ simple conversation memory
 chat_history = []
 
-def run_assistant(msg:str):
+
+def run_assistant(msg: str):
     intent = detector.detect_intent(msg)
-    ctx = context.get_context(msg,intent)
 
-    # add history into context
-    history_text = "\n".join(chat_history[-4:])  # last 4 turns only
-    full_context = f"{history_text}\n{ctx}" if ctx else history_text
+    # 🔥 If it's a reminder → handle in backend FIRST
+    if intent == "set_reminder":
+        action = router.handle_action(intent, msg)
 
-    reply = llm.generate_response(msg,intent,full_context)
-    action = router.handle_action(intent,msg)
+        if action:
+             reply = action["reply"]
+        else:
+             reply = "Sorry, I couldn't process that reminder."
 
-    # store conversation
-    chat_history.append(f"User:{msg}")
-    chat_history.append(f"Assistant:{reply}")
-    print(chat_history)
-    return {"reply": reply, "system": action}
+    else:
+        ctx = context.get_context(msg, intent)
+
+        history_text = "\n".join(chat_history[-4:])
+        full_context = f"{history_text}\n{ctx}" if ctx else history_text
+
+        reply = llm.generate_response(msg, intent, full_context)
+        action = None
+
+    # Store conversation
+    chat_history.append(f"User: {msg}")
+    chat_history.append(f"Assistant: {reply}")
+
+    return {
+        "reply": reply,
+        "system": action
+    }
+
+    print("Detected intent:", intent)
