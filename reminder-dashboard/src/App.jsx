@@ -24,7 +24,7 @@ function formatDate(iso) {
 // ─── Components ───────────────────────────────────────────────────────────────
 
 function ReminderCard({ reminder, onCancel }) {
-  const isPast      = new Date(reminder.time) < Date.now();
+  const isPast      = new Date(reminder.trigger_at) < Date.now();
   const isFired     = reminder.status === "fired";
   const isCancelled = reminder.status === "cancelled";
 
@@ -56,11 +56,11 @@ function ReminderCard({ reminder, onCancel }) {
           color: isCancelled?"#555":"#e2e8f0", marginBottom:"5px",
           whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
         }}>
-          {reminder.task}
+          {reminder.message}
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:"10px", flexWrap:"wrap" }}>
           <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"11px", color:"#64748b" }}>
-            {formatDate(reminder.time)}
+            {formatDate(reminder.trigger_at)}
           </span>
           <span style={{
             fontFamily:"'DM Mono',monospace", fontSize:"10px", fontWeight:700,
@@ -68,7 +68,7 @@ function ReminderCard({ reminder, onCancel }) {
             background: isCancelled?"#1a1a1a":isFired?"rgba(34,197,94,.15)":isPast?"rgba(239,68,68,.15)":"rgba(59,130,246,.15)",
             color: isCancelled?"#555":isFired?"#22c55e":isPast?"#ef4444":"#60a5fa",
           }}>
-            {isCancelled?"CANCELLED":isFired?"DONE":isPast?"OVERDUE":formatTimeLeft(reminder.time)}
+            {isCancelled?"CANCELLED":isFired?"DONE":isPast?"OVERDUE":formatTimeLeft(reminder.trigger_at)}
           </span>
         </div>
       </div>
@@ -236,8 +236,21 @@ export default function App() {
       const data = await res.json();
 
       // Add new reminder to UI list
-      if (data.system?.reminder) {
-        setReminders(prev => [data.system.reminder, ...prev]);
+      if (data.system?.reminder_id) {
+        const newReminder = {
+          id: data.system.reminder_id,
+          message: data.system.reply?.match(/"([^"]+)"/)?.[1] || "Reminder",
+          trigger_at: data.system.trigger_at,
+          status: "pending",
+          created_at: new Date().toISOString(),
+          fired_at: null,
+          cancelled_at: null
+        };
+        setReminders(prev => [newReminder, ...prev]);
+        // Re-fetch to get accurate list
+        fetch(`${API}/reminders`)
+          .then(r=>r.json())
+          .then(d=>setReminders(d.reminders||[]));
       }
 
       // Cancel updated in UI

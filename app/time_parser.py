@@ -83,7 +83,9 @@ def extract_task(text: str) -> str:
     t = re.sub(r'\b(remind me to|remind me|set a reminder to|set a reminder for|set reminder|please remind me to|can you remind me to)\b', '', t, flags=re.IGNORECASE)
     t = re.sub(r'\bin \d+ (second|minute|hour|day|week)s?\b', '', t, flags=re.IGNORECASE)
     t = re.sub(r'\bat \d{1,2}(:\d{2})?\s*(am|pm)?\b', '', t, flags=re.IGNORECASE)
-    t = re.sub(r'\b\d{1,2}\s*p[,.]?\b', '', t, flags=re.IGNORECASE)
+    t = re.sub(r'\b\d{1,2}\s*p[,.]?\s*\b', '', t, flags=re.IGNORECASE)
+    t = re.sub(r'\b\d{1,2}\s*a[,.]?\s*\b', '', t, flags=re.IGNORECASE)
     t = re.sub(r'\b(tomorrow|today|tonight|this evening|this morning|next week)\b', '', t, flags=re.IGNORECASE)
+    t = re.sub(r'^\s*[ap][,.]?\s*', '', t, flags=re.IGNORECASE)  # Remove "p," at start
     t = re.sub(r'\s{2,}', ' ', t).strip(' .,;-')
     return t if t else text

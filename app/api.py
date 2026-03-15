@@ -78,3 +78,10 @@ def delete_memory(memory_type: str, memory_id: str):
     if not success:
         raise HTTPException(status_code=404, detail="Memory entry not found.")
     return {"message": "Deleted."}
+
+
+@app.delete("/reminders")
+def cancel_latest():
+    """Cancel the most recently created pending reminder."""
+    result = router.cancel_latest()
+    return result
